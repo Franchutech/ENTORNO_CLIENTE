@@ -1,30 +1,31 @@
 export default class Carrito {
 
+    #productosCarrito = new Map();
+
     //CONSTRUCTOR PRODUCTOS
     constructor(productos) {
-        this.productos = productos;
-        this.unidades = {};
-
         for (let producto of productos) {
-            this.unidades[producto.SKU] = 0;
+            this.#productosCarrito.set(producto.SKU, { ...producto, unidades: 0 });
         }
     }//CIERRE CONSTRUCTOR
 
     //METODO ACTUALIZAR UNIDADES
     actualizarUnidades(SKU, unidades) {
-        this.unidades[SKU] = Math.max(0, unidades); 
-
-        } //CIERRE ACTUALIZAR UNIDADES
+        const producto = this.#productosCarrito.get(SKU);
+        if (producto) {
+            producto.unidades = Math.max(0, unidades);
+        }
+    }//CIERRE ACTUALIZAR UNIDADES
 
     //METODO OBTENER INFORMACION DE PRODUCTOS
     obtenerInformacionProducto(SKU) {
-        const infoProducto = this.productos.find(producto => producto.SKU === SKU);
+        const infoProducto = this.#productosCarrito.get(SKU);
         if (infoProducto) {
             return {
                 title: infoProducto.title,
                 price: infoProducto.price,
                 SKU: infoProducto.SKU,
-                unidades: this.unidades[SKU]
+                unidades: infoProducto.unidades
             };
         } else {
             return null; 
@@ -32,16 +33,17 @@ export default class Carrito {
 
     }//CIERRE OBTENER INFO PRODUCTOS
 
-    //METODO OBTENER CARRITO
+//METODO OBTENER CARRITO
     obtenerCarrito() {
-        const precioFinal = this.productos.reduce((total, producto) => {
-            const unidades = this.unidades[producto.SKU];
+        const precioFinal = Array.from(this.#productosCarrito.values()).reduce((total, producto) => {
+            const unidades = producto.unidades;
             return total + (parseFloat(producto.price) * unidades);
         }, 0);
+
         return {
             total: precioFinal.toFixed(2),
             currency: "€",
-            products: this.productos.filter(producto => this.unidades[producto.SKU] > 0)
+            products: Array.from(this.#productosCarrito.values()).filter(producto => producto.unidades > 0)
         };
     }//CIERRE OBTENER CARRITO
 
